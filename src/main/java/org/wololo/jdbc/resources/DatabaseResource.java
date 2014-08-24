@@ -16,20 +16,24 @@ import model.Database;
 
 import org.wololo.jdbc.Server;
 
+@Path("db/{databaseName}")
 public class DatabaseResource {
+	
+	@PathParam("databaseName") String databaseName;
+	
 	@GET
 	@Produces("application/json")
-	public Database get(@PathParam("databaseName") String databaseName) throws SQLException {
+	public Database get() throws SQLException {
 		try (Connection connection = Server.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			Database database = new Database();
 			database.name = databaseName;
-			database.children = getSchemaNames(meta, databaseName).toArray(new String[] {});
+			database.children = getSchemaNames(meta).toArray(new String[] {});
 			return database;
 		}
 	}
 	
-	List<String> getSchemaNames(DatabaseMetaData meta, String databaseName) throws SQLException {
+	List<String> getSchemaNames(DatabaseMetaData meta) throws SQLException {
 		List<String> schemaNames = new ArrayList<String>();
 		try (ResultSet schemas = meta.getSchemas(databaseName, null)) {
 			while(schemas.next()) {
@@ -38,10 +42,5 @@ public class DatabaseResource {
 			}
 		}
 		return schemaNames;
-	}
-	
-	@Path("schemas/{schemaName}")
-	public SchemaResource database() {
-		return new SchemaResource();
 	}
 }

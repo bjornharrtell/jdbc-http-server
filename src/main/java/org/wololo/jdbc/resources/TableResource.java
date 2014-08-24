@@ -12,19 +12,18 @@ import model.Table;
 
 import org.wololo.jdbc.Server;
 
+@Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}")
 public class TableResource {
+
+	@PathParam("tableName") String tableName;
+	
 	@GET
 	@Produces("application/json")
-	public Table get(@PathParam("tableName") String tableName) throws SQLException {
+	public Table get() throws SQLException {
 		try (Connection connection = Server.getConnection()) {
 			Table table = new Table();
 			table.name = tableName;
 			return table;
 		}
-	}
-	
-	@Path("rows")
-	public RowsResource database() {
-		return new RowsResource();
 	}
 }

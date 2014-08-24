@@ -18,34 +18,33 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wololo.jdbc.Server;
 
+@Path("db/{databaseName}/schemas/{schemaName}/tables")
 public class TablesResource {
 	final static Logger logger = LoggerFactory.getLogger(TablesResource.class);
 	
+	@PathParam("databaseName") String databaseName;
+	@PathParam("schemaName") String schemaName;
+	
 	@GET
 	@Produces("application/json")
-	public Tables get(@PathParam("catalogName") String catalogName, @PathParam("schemaName") String schemaName) throws SQLException {
+	public Tables get() throws SQLException {
 		try (Connection connection = Server.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			Tables tables = new Tables();
 			tables.name = schemaName;
-			tables.children = getTableNames(meta, catalogName, schemaName).toArray(new String[] {});
+			tables.children = getTableNames(meta).toArray(new String[] {});
 			return tables;
 		}
 	}
 	
-	List<String> getTableNames(DatabaseMetaData meta, String catalog, String schemaName) throws SQLException {
+	List<String> getTableNames(DatabaseMetaData meta) throws SQLException {
 		List<String> tableNames = new ArrayList<String>();
-		try (ResultSet tables = meta.getTables(catalog, schemaName, null, null)) {
+		try (ResultSet tables = meta.getTables(databaseName, schemaName, null, null)) {
 			while(tables.next()) {
 				String tableName = tables.getString(3);
 				tableNames.add(tableName);
 			}
 		}
 		return tableNames;
-	}
-	
-	@Path("{tableName}")
-	public TableResource table() {
-		return new TableResource();
 	}
 }

@@ -38,9 +38,4 @@ public class DatabasesResource {
 		}
 		return catalogNames;
 	}
-	
-	@Path("{databaseName}")
-	public DatabaseResource database() {
-		return new DatabaseResource();
-	}
 }

@@ -18,6 +18,7 @@ import model.Table;
 
 import org.wololo.jdbc.Server;
 
+@Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}/rows/{id}")
 public class RowResource {
 	
 }

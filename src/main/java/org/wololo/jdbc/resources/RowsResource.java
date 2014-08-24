@@ -23,27 +23,29 @@ import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 
+@Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}/rows")
 public class RowsResource {
 	final static Logger logger = LoggerFactory.getLogger(RowsResource.class);
 
+	@PathParam("databaseName") String databaseName;
+	@PathParam("schemaName") String schemaName;
+	@PathParam("tableName") String tableName;
+	
 	@GET
 	@Produces("application/json")
-	public StreamingOutput get(
-			@PathParam("databaseName") final String databaseName,
-			@PathParam("schemaName") final String schemaName,
-			@PathParam("tableName") final String tableName) throws SQLException {
+	public StreamingOutput get() throws SQLException {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				final String sql = "select * from " + schemaName + "." + tableName;
-				logger.debug(sql);
-				writeRows(sql, output);
+				writeRows(output);
 			}
 		};
 	}
 	
-	void writeRows(String sql, OutputStream output) throws IOException {
-		JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
+	void writeRows(final OutputStream output) throws IOException {
+		final String sql = "select * from " + schemaName + "." + tableName;
+		logger.debug(sql);
+		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();
 		try (
 				final Connection connection = Server.getConnection();

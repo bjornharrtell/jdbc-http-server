@@ -12,19 +12,18 @@ import model.Schema;
 
 import org.wololo.jdbc.Server;
 
+@Path("db/{databaseName}/schemas/{schemaName}")
 public class SchemaResource {
+	
+	@PathParam("schemaName") String schemaName;
+	
 	@GET
 	@Produces("application/json")
-	public Schema get(@PathParam("schemaName") String schemaName) throws SQLException {
+	public Schema get() throws SQLException {
 		try (Connection connection = Server.getConnection()) {
 			Schema schema = new Schema();
 			schema.name = schemaName;
 			return schema;
 		}
-	}
-	
-	@Path("tables")
-	public TablesResource tables() {
-		return new TablesResource();
 	}
 }
