@@ -5,9 +5,12 @@ import static org.jooq.impl.DSL.*;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -53,8 +56,11 @@ public class RowsResource {
 				final Connection connection = Server.getConnection();
 				final Statement statement = connection.createStatement();
 				final ResultSet resultSet = statement.executeQuery(sql)) {
+			DatabaseMetaData meta = connection.getMetaData();
+			List<String> columns = getColumns(meta);
+			int columnsTotal = columns.size();
 			while (resultSet.next()) {
-				writeRow(jsonGenerator, resultSet);
+				writeRow(jsonGenerator, resultSet, columnsTotal);
 			}
 		} catch (SQLException e) {
 			logger.error("SQLException when reading row data from ResultSet", e);
@@ -65,12 +71,22 @@ public class RowsResource {
 		}
 	}
 	
-	void writeRow(final JsonGenerator jsonGenerator, final ResultSet resultSet) throws SQLException, JsonGenerationException, IOException {
+	void writeRow(final JsonGenerator jsonGenerator, final ResultSet resultSet, int columnsTotal) throws SQLException, JsonGenerationException, IOException {
 		jsonGenerator.writeStartArray();
-		Object c1 = resultSet.getObject(1);
-		Object c2 = resultSet.getObject(2);
-		jsonGenerator.writeObject(c1);
-		jsonGenerator.writeObject(c2);
+		for (int i = 1; i<columnsTotal; i++) {
+			jsonGenerator.writeObject(resultSet.getObject(i));
+		}
 		jsonGenerator.writeEndArray();
+	}
+	
+	List<String> getColumns(DatabaseMetaData meta) throws SQLException {
+		try (ResultSet resultSet = meta.getColumns(databaseName, schemaName, tableName, null)) {
+			List<String> columnNames = new ArrayList<String>();
+			while (resultSet.next()) {
+				String columnName = resultSet.getString(4);
+				columnNames.add(columnName);
+			}
+			return columnNames;
+		}
 	}
 }

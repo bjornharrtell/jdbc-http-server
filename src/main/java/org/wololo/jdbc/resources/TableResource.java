@@ -15,6 +15,8 @@ import org.wololo.jdbc.Server;
 @Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}")
 public class TableResource {
 
+	@PathParam("databaseName") String databaseName;
+	@PathParam("schemaName") String schemaName;
 	@PathParam("tableName") String tableName;
 	
 	@GET

@@ -2,7 +2,10 @@ package org.wololo.jdbc;
 
 import java.io.IOException;
 import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Enumeration;
 import java.util.Properties;
 
 import javax.servlet.ServletContextEvent;
@@ -36,20 +39,43 @@ public class Server extends ResourceConfig implements ServletContextListener {
 	}
 
 	@Override
-	public void contextDestroyed(ServletContextEvent arg0) {
+	public void contextDestroyed(ServletContextEvent event) {
 		if (ds != null) ds.close();
+		
+		// Now deregister JDBC drivers in this context's ClassLoader:
+	    // Get the webapp's ClassLoader
+	    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+	    // Loop through all drivers
+	    Enumeration<Driver> drivers = DriverManager.getDrivers();
+	    while (drivers.hasMoreElements()) {
+	        Driver driver = drivers.nextElement();
+	        if (driver.getClass().getClassLoader() == cl) {
+	            // This driver was registered by the webapp's ClassLoader, so deregister it:
+	            try {
+	                logger.info("Deregistering JDBC driver {}", driver);
+	                DriverManager.deregisterDriver(driver);
+	            } catch (SQLException ex) {
+	            	logger.error("Error deregistering JDBC driver {}", driver, ex);
+	            }
+	        } else {
+	            // driver was not registered by the webapp's ClassLoader and may be in use elsewhere
+	        	logger.trace("Not deregistering JDBC driver {} as it does not belong to this webapp's ClassLoader", driver);
+	        }
+	    }
 	}
 
 	@Override
-	public void contextInitialized(ServletContextEvent arg0) {
-		Properties properties = new Properties();
+	public void contextInitialized(ServletContextEvent event) {
+		String fileName = "hikari.properties";
 		try {
-			properties.load(getClassLoader().getResourceAsStream("hikari.properties"));
+			Properties properties = new Properties();
+			properties.load(getClassLoader().getResourceAsStream(fileName));
+			HikariConfig config = new HikariConfig(properties);
+			ds = new HikariDataSource(config);
 		} catch (IOException | java.lang.NullPointerException e) {
-			logger.error("FATAL ERROR: Could not load hikari.properties");
+			logger.error("FATAL ERROR: Could not load {}", fileName, e);
 			throw new RuntimeException(e);
 		}
-		HikariConfig config = new HikariConfig(properties);
-		ds = new HikariDataSource(config);
+		
 	}
 }
