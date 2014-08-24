@@ -26,9 +26,4 @@ public class ServerRootResource {
 			return serverRoot;
 		}
 	}
-	
-	@Path("db")
-	public DatabasesResource databases() {
-		return new DatabasesResource();
-	}
 }

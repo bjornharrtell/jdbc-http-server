@@ -71,9 +71,4 @@ public class RowsResource {
 		jsonGenerator.writeObject(c2);
 		jsonGenerator.writeEndArray();
 	}
-
-	@Path("{id}")
-	public RowResource row() {
-		return new RowResource();
-	}
 }
