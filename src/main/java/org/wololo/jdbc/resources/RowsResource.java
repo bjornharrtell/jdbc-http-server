@@ -1,5 +1,7 @@
 package org.wololo.jdbc.resources;
 
+import static org.jooq.impl.DSL.*;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.Connection;
@@ -43,7 +45,7 @@ public class RowsResource {
 	}
 	
 	void writeRows(final OutputStream output) throws IOException {
-		final String sql = "select * from " + schemaName + "." + tableName;
+		final String sql = select(field("*")).from(schemaName + "." + tableName).toString();
 		logger.debug(sql);
 		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();

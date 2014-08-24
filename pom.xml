@@ -37,6 +37,11 @@
   		<artifactId>postgresql</artifactId>
   		<version>9.3-1102-jdbc41</version>
   	</dependency>
+  	<dependency>
+  		<groupId>org.jooq</groupId>
+  		<artifactId>jooq</artifactId>
+  		<version>3.4.2</version>
+  	</dependency>
   </dependencies>
   <build>
     <plugins>
