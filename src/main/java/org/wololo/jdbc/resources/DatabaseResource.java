@@ -14,17 +14,15 @@ import javax.ws.rs.Produces;
 
 import model.Database;
 
-import org.wololo.jdbc.Server;
-
 @Path("db/{databaseName}")
-public class DatabaseResource {
+public class DatabaseResource extends DataSourceResource {
 	
 	@PathParam("databaseName") String databaseName;
 	
 	@GET
 	@Produces("application/json")
 	public Database get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			Database database = new Database();
 			database.name = databaseName;

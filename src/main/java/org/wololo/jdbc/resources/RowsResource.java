@@ -21,7 +21,6 @@ import javax.ws.rs.core.StreamingOutput;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wololo.jdbc.Server;
 
 import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -29,7 +28,7 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonGenerator;
 
 @Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}/rows")
-public class RowsResource {
+public class RowsResource extends DataSourceResource {
 	final static Logger logger = LoggerFactory.getLogger(RowsResource.class);
 
 	@PathParam("databaseName") String databaseName;
@@ -53,7 +52,7 @@ public class RowsResource {
 		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();
 		try (
-				final Connection connection = Server.getConnection();
+				final Connection connection = ds.getConnection();
 				final Statement statement = connection.createStatement();
 				final ResultSet resultSet = statement.executeQuery(sql)) {
 			DatabaseMetaData meta = connection.getMetaData();

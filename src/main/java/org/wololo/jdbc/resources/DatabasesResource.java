@@ -13,14 +13,13 @@ import javax.ws.rs.Produces;
 
 import model.Databases;
 
-import org.wololo.jdbc.Server;
-
 @Path("db")
-public class DatabasesResource {
+public class DatabasesResource extends DataSourceResource {
+	
 	@GET
 	@Produces("application/json")
 	public Databases get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			Databases databases = new Databases();
 			databases.children = getCatalogNames(meta).toArray(new String[] {});

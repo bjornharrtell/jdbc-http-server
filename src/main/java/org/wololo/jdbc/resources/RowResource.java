@@ -17,10 +17,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import org.wololo.jdbc.Server;
-
 @Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}/rows/{id}")
-public class RowResource {
+public class RowResource extends DataSourceResource {
 	
 	@PathParam("databaseName") String databaseName;
 	@PathParam("schemaName") String schemaName;
@@ -30,7 +28,7 @@ public class RowResource {
 	@GET
 	@Produces("application/json")
 	public Map<String, Object> get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			
 			String primaryKey = getPrimaryKey(meta);

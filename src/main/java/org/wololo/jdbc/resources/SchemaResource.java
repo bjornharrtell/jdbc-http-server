@@ -10,17 +10,15 @@ import javax.ws.rs.Produces;
 
 import model.Schema;
 
-import org.wololo.jdbc.Server;
-
 @Path("db/{databaseName}/schemas/{schemaName}")
-public class SchemaResource {
+public class SchemaResource extends DataSourceResource {
 	
 	@PathParam("schemaName") String schemaName;
 	
 	@GET
 	@Produces("application/json")
 	public Schema get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			Schema schema = new Schema();
 			schema.name = schemaName;
 			return schema;

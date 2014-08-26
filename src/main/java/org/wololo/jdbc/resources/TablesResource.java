@@ -16,10 +16,9 @@ import model.Tables;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.wololo.jdbc.Server;
 
 @Path("db/{databaseName}/schemas/{schemaName}/tables")
-public class TablesResource {
+public class TablesResource extends DataSourceResource {
 	final static Logger logger = LoggerFactory.getLogger(TablesResource.class);
 	
 	@PathParam("databaseName") String databaseName;
@@ -28,7 +27,7 @@ public class TablesResource {
 	@GET
 	@Produces("application/json")
 	public Tables get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			Tables tables = new Tables();
 			tables.name = schemaName;

@@ -10,14 +10,12 @@ import javax.ws.rs.Produces;
 
 import model.ServerRoot;
 
-import org.wololo.jdbc.Server;
-
 @Path("")
-public class ServerRootResource {
+public class ServerRootResource extends DataSourceResource {
 	@GET
 	@Produces("application/json")
 	public ServerRoot get() throws SQLException {
-		try (Connection connection = Server.getConnection()) {
+		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			ServerRoot serverRoot = new ServerRoot();
 			serverRoot.version = meta.getDatabaseMajorVersion() * 100 + meta.getDatabaseMinorVersion() * 10;
