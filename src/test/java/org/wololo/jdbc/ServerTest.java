@@ -1,45 +1,35 @@
 package org.wololo.jdbc;
 
-import static org.junit.Assert.*;
-
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Properties;
 
 import javax.naming.NamingException;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.core.Application;
 
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.BeforeClass;
 import org.springframework.mock.jndi.SimpleNamingContextBuilder;
-import org.wololo.jdbc.resources.DatabasesResource;
 
+import com.google.common.io.CharStreams;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 public class ServerTest extends JerseyTest {
 
-	@Path("hello")
-    public static class HelloResource {
-        @GET
-        public String getHello() {
-            return "Hello World!";
-        }
-    }
+	static HikariDataSource ds;
 	
-	@Override
-    protected Application configure() {
-		String fileName = "hikari.properties";
+	String getJson(String name) throws IOException {
+		return CharStreams.toString(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("h2/" + name + ".json")));
+	}
+	
+	@BeforeClass
+	public static void setupDB() {
+		if (ds != null) return;
 		try {
 			Properties properties = new Properties();
-			properties.load(this.getClass().getClassLoader().getResourceAsStream(fileName));
+			properties.load(ServerTest.class.getClassLoader().getResourceAsStream("h2/hikari.properties"));
 			HikariConfig config = new HikariConfig(properties);
-			HikariDataSource ds = new HikariDataSource(config);
+			ds = new HikariDataSource(config);
 			SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
 			builder.bind("jdbc-http-server/db", ds);
 			builder.activate();
@@ -47,18 +37,5 @@ public class ServerTest extends JerseyTest {
 			//logger.error("FATAL ERROR: Could not load {}", fileName, e);
 			throw new RuntimeException(e);
 		}
-		
-		//enable(TestProperties.LOG_TRAFFIC);
-        //enable(TestProperties.DUMP_ENTITY);
-        
-        return new ResourceConfig(DatabasesResource.class);
-        //return new ResourceConfig(HelloResource.class);
-    }
-
-	@Test
-	public void test() {
-		final String db = target("db").request().get(String.class);
-		assertEquals("{\"type\":\"databases\",\"name\":\"db\",\"children\":[\"test\"]}", db);
 	}
-
 }

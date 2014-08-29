@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -32,9 +33,11 @@ public class Server extends ResourceConfig implements ServletContextListener {
 	
 	HikariDataSource ds;
 	
-	public Server() throws IOException {
+	public Server() throws IOException, SQLException {
 		packages("org.wololo.jdbc.resources");
 		register(JacksonFeature.class);
+		
+		
     }
 
 	@Override
@@ -66,7 +69,7 @@ public class Server extends ResourceConfig implements ServletContextListener {
 	@Override
 	public void contextInitialized(ServletContextEvent event) {
 		// TODO: configure data source in container instead...		
-		String fileName = "hikari.properties";
+		String fileName = "h2.properties";
 		try {
 			Properties properties = new Properties();
 			properties.load(getClassLoader().getResourceAsStream(fileName));
@@ -75,11 +78,9 @@ public class Server extends ResourceConfig implements ServletContextListener {
 			SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
 			builder.bind("jdbc-http-server/db", ds);
 			builder.activate();
-			//builder.de
 		} catch (IOException | java.lang.NullPointerException | IllegalStateException | NamingException e) {
 			logger.error("FATAL ERROR: Could not load {}", fileName, e);
 			throw new RuntimeException(e);
 		}
-		
 	}
 }
