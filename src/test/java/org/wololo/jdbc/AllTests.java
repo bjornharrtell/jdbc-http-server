@@ -6,11 +6,12 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(Suite.class)
 @SuiteClasses({ 
-	ServerTest.class,
 	ServerRootTest.class,
 	DatabasesTest.class,
 	DatabaseTest.class,
-	TablesTest.class
+	TablesTest.class,
+	RowsTest.class,
+	RowTest.class
 })
 public class AllTests {
 

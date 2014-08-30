@@ -2,11 +2,16 @@ package org.wololo.jdbc;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import javax.naming.NamingException;
 
 import org.glassfish.jersey.test.JerseyTest;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.springframework.mock.jndi.SimpleNamingContextBuilder;
 
@@ -20,6 +25,22 @@ public class ServerTest extends JerseyTest {
 	
 	String getJson(String name) throws IOException {
 		return CharStreams.toString(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("h2/" + name + ".json")));
+	}
+	
+	@Before
+	public void before() throws SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("create table test (id serial, name varchar)");
+		}
+	}
+
+	@After
+	public void after() throws SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("drop table test");
+		}
 	}
 	
 	@BeforeClass
