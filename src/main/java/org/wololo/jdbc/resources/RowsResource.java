@@ -72,7 +72,7 @@ public class RowsResource extends DataSourceResource {
 	
 	void writeRow(final JsonGenerator jsonGenerator, final ResultSet resultSet, int columnsTotal) throws SQLException, JsonGenerationException, IOException {
 		jsonGenerator.writeStartArray();
-		for (int i = 1; i<columnsTotal; i++) {
+		for (int i = 1; i <= columnsTotal; i++) {
 			jsonGenerator.writeObject(resultSet.getObject(i));
 		}
 		jsonGenerator.writeEndArray();

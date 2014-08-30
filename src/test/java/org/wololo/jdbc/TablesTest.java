@@ -13,7 +13,6 @@ import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.wololo.jdbc.resources.DatabaseResource;
 import org.wololo.jdbc.resources.TablesResource;
 
 public class TablesTest extends ServerTest {
