@@ -11,14 +11,24 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import org.jooq.Record;
+import org.jooq.UpdateSetFirstStep;
+import org.jooq.UpdateSetMoreStep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @Path("db/{databaseName}/schemas/{schemaName}/tables/{tableName}/rows/{id}")
 public class RowResource extends DataSourceResource {
+	
+	final static Logger logger = LoggerFactory.getLogger(RowResource.class);
 	
 	@PathParam("databaseName") String databaseName;
 	@PathParam("schemaName") String schemaName;
@@ -36,6 +46,7 @@ public class RowResource extends DataSourceResource {
 					.from(schemaName + "." + tableName)
 					.where(field(primaryKey).equal(id))
 					.toString();
+			logger.debug(sql);
 			
 			try (
 					final Statement statement = connection.createStatement();
@@ -48,6 +59,28 @@ public class RowResource extends DataSourceResource {
 				}
 				
 				return row;
+			}
+		}
+	}
+	
+	@PUT
+	public boolean put(Map<String, Object> row) throws SQLException {
+		try (Connection connection = ds.getConnection()) {
+			DatabaseMetaData meta = connection.getMetaData();
+			
+			String primaryKey = getPrimaryKey(meta);
+			
+			UpdateSetFirstStep<Record> sqlTemp = update(table(tableName));
+			UpdateSetMoreStep<Record> build = null;
+			for(Entry<String, Object> entry : row.entrySet()) {
+				build = sqlTemp.set(field(entry.getKey()), entry.getValue());
+			}
+			final String sql = build.where(field(primaryKey).equal(id)).toString();
+			logger.debug(sql);
+			
+			try (final Statement statement = connection.createStatement()) {
+				final boolean result = statement.execute(sql);
+				return result;
 			}
 		}
 	}
