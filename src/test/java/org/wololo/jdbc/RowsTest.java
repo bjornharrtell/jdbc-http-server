@@ -7,19 +7,12 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-import javax.ws.rs.core.Application;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.Test;
-import org.wololo.jdbc.resources.RowsResource;
 
 public class RowsTest extends ServerTest {
-
-	@Override
-	protected Application configure() {
-		return new ResourceConfig(RowsResource.class);
-	}
-
 	@Test
 	public void testEmpty() throws IOException {
 		assertEquals(getJson("Rows"),
@@ -44,5 +37,23 @@ public class RowsTest extends ServerTest {
 		}
 		assertEquals(getJson("RowsTwo"),
 				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().get(String.class));
+	}
+		
+	@Test
+	public void testPost() throws IOException, SQLException {
+		Entity<String> entity = Entity.json(getJson("Row"));
+		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().post(entity);
+		assertEquals(204, response.getStatus());
+		assertEquals(getJson("Row"),
+				target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().get(String.class));
+	}
+	
+	@Test
+	public void testPostFailUniquePK() throws IOException, SQLException {
+		Entity<String> entity = Entity.json(getJson("Row"));
+		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().post(entity);
+		assertEquals(204, response.getStatus());
+		response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().post(entity);
+		assertEquals(500, response.getStatus());
 	}
 }

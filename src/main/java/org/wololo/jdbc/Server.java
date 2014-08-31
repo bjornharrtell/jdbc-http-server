@@ -3,7 +3,6 @@ package org.wololo.jdbc;
 import java.io.IOException;
 import java.sql.SQLException;
 
-import javax.servlet.annotation.WebListener;
 import javax.ws.rs.ApplicationPath;
 
 import org.glassfish.jersey.jackson.JacksonFeature;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ApplicationPath("/")
-@WebListener
 public class Server extends ResourceConfig {
 	
 	final static Logger logger = LoggerFactory.getLogger(Server.class);
@@ -20,5 +18,6 @@ public class Server extends ResourceConfig {
 	public Server() throws IOException, SQLException {
 		packages("org.wololo.jdbc.resources");
 		register(JacksonFeature.class);		
+		register(GenericExceptionMapper.class);
     }
 }

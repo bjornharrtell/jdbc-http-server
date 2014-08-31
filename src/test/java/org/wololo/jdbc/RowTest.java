@@ -8,23 +8,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Response;
 
-import org.glassfish.jersey.server.ResourceConfig;
-import org.junit.Before;
 import org.junit.Test;
-import org.wololo.jdbc.resources.RowResource;
 
 public class RowTest extends ServerTest {
-
-	@Override
-	protected Application configure() {
-		return new ResourceConfig(RowResource.class);
-	}
-
 	@Test
-	public void testGet() throws IOException, SQLException {
+	public void testGET() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
 			statement.execute("insert into test (name) values ('test')");
@@ -34,15 +24,32 @@ public class RowTest extends ServerTest {
 	}
 	
 	@Test
-	public void testPut() throws IOException, SQLException {
+	public void testPUT() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
 			statement.execute("insert into test (name) values ('test')");
 		}
 		Entity<String> entity = Entity.json(getJson("RowPUT"));
 		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().put(entity);
-		assertEquals(200, response.getStatus());
+		assertEquals(204, response.getStatus());
 		assertEquals(getJson("RowPUT"),
 				target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().get(String.class));
 	}
+	
+	@Test
+	public void testDELETE() throws IOException, SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("insert into test (name) values ('test')");
+		}
+		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().delete();
+		assertEquals(204, response.getStatus());
+	}
+	
+	@Test
+	public void testDELETEFailOnMissingPK() throws IOException, SQLException {
+		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().delete();
+		assertEquals(500, response.getStatus());
+	}
+
 }

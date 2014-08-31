@@ -13,12 +13,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
+import org.jooq.DeleteWhereStep;
+import org.jooq.InsertSetMoreStep;
+import org.jooq.InsertSetStep;
 import org.jooq.Record;
 import org.jooq.UpdateSetFirstStep;
 import org.jooq.UpdateSetMoreStep;
@@ -64,7 +69,7 @@ public class RowResource extends DataSourceResource {
 	}
 	
 	@PUT
-	public boolean put(Map<String, Object> row) throws SQLException {
+	public void put(Map<String, Object> row) throws SQLException {
 		try (Connection connection = ds.getConnection()) {
 			DatabaseMetaData meta = connection.getMetaData();
 			
@@ -79,10 +84,45 @@ public class RowResource extends DataSourceResource {
 			logger.debug(sql);
 			
 			try (final Statement statement = connection.createStatement()) {
-				final boolean result = statement.execute(sql);
-				return result;
+				final int result = statement.executeUpdate(sql);
+				if (result == 0) {
+					throw new RuntimeException("No rows was found and updated with id " + id);
+				} else if (result > 1) {
+					// TODO: rollback transaction?
+					throw new RuntimeException("Multiple rows was found and updated with id " + id);
+				}
 			}
 		}
+	}
+	
+	@DELETE
+	public void del() throws SQLException {
+		try (Connection connection = ds.getConnection()) {
+			DatabaseMetaData meta = connection.getMetaData();
+			
+			String primaryKey = getPrimaryKey(meta);
+
+			final String sql = delete(table(tableName)).where(field(primaryKey).equal(coercedPK())).toString();
+			logger.debug(sql);
+			
+			try (final Statement statement = connection.createStatement()) {
+				final int result = statement.executeUpdate(sql);
+				if (result == 0) {
+					throw new RuntimeException("No rows was found and deleted with id " + id);
+				} else if (result > 1) {
+					// TODO: rollback transaction?
+					throw new RuntimeException("Multiple rows was found and deleted with id " + id);
+				}
+			}
+		}
+	}
+	
+	Object coercedPK() {
+		try { 
+	        return Integer.parseInt(id); 
+	    } catch(NumberFormatException e) { 
+	        return id; 
+	    }
 	}
 	
 	List<String> getColumns(DatabaseMetaData meta) throws SQLException {

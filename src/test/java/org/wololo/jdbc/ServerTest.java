@@ -8,7 +8,9 @@ import java.sql.Statement;
 import java.util.Properties;
 
 import javax.naming.NamingException;
+import javax.ws.rs.core.Application;
 
+import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.After;
 import org.junit.Before;
@@ -23,6 +25,14 @@ public class ServerTest extends JerseyTest {
 
 	static HikariDataSource ds;
 	
+	@Override
+	protected Application configure() {
+		ResourceConfig application = new ResourceConfig();
+		application.packages("org.wololo.jdbc.resources");
+		application.register(GenericExceptionMapper.class);
+		return application;
+	}
+		
 	String getJson(String name) throws IOException {
 		return CharStreams.toString(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("h2/" + name + ".json")));
 	}

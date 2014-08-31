@@ -11,14 +11,20 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.jooq.InsertSetMoreStep;
+import org.jooq.InsertSetStep;
+import org.jooq.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +50,24 @@ public class RowsResource extends DataSourceResource {
 				writeRows(output);
 			}
 		};
+	}
+	
+	@POST
+	public void post(Map<String, Object> row) throws SQLException {
+		try (Connection connection = ds.getConnection()) {
+			InsertSetStep<Record> sqlTemp = insertInto(table(tableName));
+			InsertSetMoreStep<Record> build = null;
+			for(Entry<String, Object> entry : row.entrySet()) {
+				build = sqlTemp.set(field(entry.getKey()), entry.getValue());
+			}
+			final String sql = build.toString();
+			logger.debug(sql);
+			
+			try (final Statement statement = connection.createStatement()) {
+				final int result = statement.executeUpdate(sql);
+				// TODO: check that result is as expected
+			}
+		}
 	}
 	
 	void writeRows(final OutputStream output) throws IOException {

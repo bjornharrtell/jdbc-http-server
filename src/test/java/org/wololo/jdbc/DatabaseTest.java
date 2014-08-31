@@ -16,12 +16,6 @@ import org.junit.Test;
 import org.wololo.jdbc.resources.DatabaseResource;
 
 public class DatabaseTest extends ServerTest {
-
-	@Override
-	protected Application configure() {
-		return new ResourceConfig(DatabaseResource.class);
-	}
-
 	@Test
 	public void test() throws IOException {
 		assertEquals(getJson("Database"),
