@@ -38,6 +38,17 @@ public class RowsTest extends ServerTest {
 		assertEquals(getJson("RowsTwo"),
 				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().get(String.class));
 	}
+	
+	@Test
+	public void testTwoWhere() throws IOException, SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("insert into test (name) values ('test')");
+			statement.execute("insert into test (name) values ('test2')");
+		}
+		assertEquals(getJson("RowsTwoWhere"),
+				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").queryParam("where", "name='test2'").request().get(String.class));
+	}
 		
 	@Test
 	public void testPost() throws IOException, SQLException {

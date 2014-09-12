@@ -14,17 +14,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
 import org.jooq.Record;
+import org.jooq.Record1;
+import org.jooq.SelectJoinStep;
+import org.jooq.SelectLimitStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,11 +48,11 @@ public class RowsResource extends DataSourceResource {
 	
 	@GET
 	@Produces("application/json")
-	public StreamingOutput get() throws SQLException {
+	public StreamingOutput get(@DefaultValue("") @QueryParam("where") final String where, @DefaultValue("0") @QueryParam("limit") final String limit) throws SQLException {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				writeRows(output);
+				writeRows(output, where, parseLimitParam(limit));
 			}
 		};
 	}
@@ -69,9 +74,27 @@ public class RowsResource extends DataSourceResource {
 			}
 		}
 	}
+		
+	int parseLimitParam(final String limit) {
+		if (limit == "0") {
+			return 0;
+		} else {
+			return Integer.parseInt(limit);
+		}
+	}
 	
-	void writeRows(final OutputStream output) throws IOException {
-		final String sql = select(field("*")).from(schemaName + "." + tableName).toString();
+	void writeRows(final OutputStream output, final String where, final int limit) throws IOException {
+		SelectJoinStep<Record1<Object>> query = select(field("*")).from(schemaName + "." + tableName);
+		
+		if (where.length()>0) {
+			query.where(where);
+		}
+		
+		if (limit>0) {
+			query.limit(limit);
+		}
+		
+		final String sql = query.toString();
 		logger.debug(sql);
 		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();
