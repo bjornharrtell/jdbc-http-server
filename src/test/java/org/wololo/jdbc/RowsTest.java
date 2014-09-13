@@ -28,6 +28,7 @@ public class RowsTest extends ServerTest {
 		assertEquals(getJson("RowsOne"),
 				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").request().get(String.class));
 	}
+	
 	@Test
 	public void testTwo() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
@@ -40,6 +41,17 @@ public class RowsTest extends ServerTest {
 	}
 	
 	@Test
+	public void testTwoSelectTwo() throws IOException, SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("insert into test (name) values ('test')");
+			statement.execute("insert into test (name) values ('test2')");
+		}
+		assertEquals(getJson("RowsTwo"),
+				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").queryParam("select", "id,name").request().get(String.class));
+	}
+	
+	@Test
 	public void testTwoWhere() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
@@ -48,6 +60,17 @@ public class RowsTest extends ServerTest {
 		}
 		assertEquals(getJson("RowsTwoWhere"),
 				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").queryParam("where", "name='test2'").request().get(String.class));
+	}
+	
+	@Test
+	public void testTwoSelect() throws IOException, SQLException {
+		try (Connection connection = ds.getConnection();
+				Statement statement = connection.createStatement()) {
+			statement.execute("insert into test (name) values ('test')");
+			statement.execute("insert into test (name) values ('test2')");
+		}
+		assertEquals(getJson("RowsTwoSelect"),
+				target("db/TEST/schemas/PUBLIC/tables/TEST/rows").queryParam("select", "id").request().get(String.class));
 	}
 		
 	@Test

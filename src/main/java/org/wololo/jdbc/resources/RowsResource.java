@@ -1,6 +1,9 @@
 package org.wololo.jdbc.resources;
 
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.insertInto;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,12 +27,11 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.jooq.Field;
 import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
 import org.jooq.Record;
-import org.jooq.Record1;
 import org.jooq.SelectJoinStep;
-import org.jooq.SelectLimitStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,11 +50,14 @@ public class RowsResource extends DataSourceResource {
 	
 	@GET
 	@Produces("application/json")
-	public StreamingOutput get(@DefaultValue("") @QueryParam("where") final String where, @DefaultValue("0") @QueryParam("limit") final String limit) throws SQLException {
+	public StreamingOutput get(
+			@DefaultValue("*") @QueryParam("select") final String select,
+			@DefaultValue("") @QueryParam("where") final String where,
+			@DefaultValue("0") @QueryParam("limit") final String limit) throws SQLException {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				writeRows(output, where, parseLimitParam(limit));
+				writeRows(output, select, where, parseLimitParam(limit));
 			}
 		};
 	}
@@ -74,17 +79,36 @@ public class RowsResource extends DataSourceResource {
 			}
 		}
 	}
+	
+	Field<Object>[] parseSelectParam(final String select) {
+		if (select.equals("*")) {
+			return new Field[] { field(select) };
+		} else {
+			String[] columns = select.split(",");
+			List<Field> fields = new ArrayList<Field>();
+			for (String column : columns) {
+				fields.add(field(column));
+			}
+			return fields.toArray(new Field[] { });
+		}
+	};
 		
 	int parseLimitParam(final String limit) {
-		if (limit == "0") {
+		if (limit.equals("0")) {
 			return 0;
 		} else {
 			return Integer.parseInt(limit);
 		}
 	}
 	
-	void writeRows(final OutputStream output, final String where, final int limit) throws IOException {
-		SelectJoinStep<Record1<Object>> query = select(field("*")).from(schemaName + "." + tableName);
+	void writeRows(
+			final OutputStream output,
+			final String select,
+			final String where,
+			final int limit) throws IOException {
+		
+		Field<Object>[] fields = parseSelectParam(select);
+		SelectJoinStep<Record> query = select(fields).from(schemaName + "." + tableName);
 		
 		if (where.length()>0) {
 			query.where(where);
@@ -104,7 +128,7 @@ public class RowsResource extends DataSourceResource {
 				final ResultSet resultSet = statement.executeQuery(sql)) {
 			DatabaseMetaData meta = connection.getMetaData();
 			List<String> columns = getColumns(meta);
-			int columnsTotal = columns.size();
+			int columnsTotal = (select.equals("*")) ? columns.size() : fields.length;
 			while (resultSet.next()) {
 				writeRow(jsonGenerator, resultSet, columnsTotal);
 			}
