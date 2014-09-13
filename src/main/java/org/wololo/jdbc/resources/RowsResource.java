@@ -31,7 +31,10 @@ import org.jooq.Field;
 import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
 import org.jooq.Record;
+import org.jooq.Select;
+import org.jooq.SelectConditionStep;
 import org.jooq.SelectJoinStep;
+import org.jooq.SelectOffsetStep;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +56,12 @@ public class RowsResource extends DataSourceResource {
 	public StreamingOutput get(
 			@DefaultValue("*") @QueryParam("select") final String select,
 			@DefaultValue("") @QueryParam("where") final String where,
-			@DefaultValue("0") @QueryParam("limit") final String limit) throws SQLException {
+			@DefaultValue("0") @QueryParam("limit") final String limit,
+			@DefaultValue("0") @QueryParam("offset") final String offset) throws SQLException {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				writeRows(output, select, where, parseLimitParam(limit));
+				writeRows(output, select, where, parseNumericParam(limit), parseNumericParam(offset));
 			}
 		};
 	}
@@ -93,7 +97,7 @@ public class RowsResource extends DataSourceResource {
 		}
 	};
 		
-	int parseLimitParam(final String limit) {
+	int parseNumericParam(final String limit) {
 		if (limit.equals("0")) {
 			return 0;
 		} else {
@@ -105,9 +109,11 @@ public class RowsResource extends DataSourceResource {
 			final OutputStream output,
 			final String select,
 			final String where,
-			final int limit) throws IOException {
+			final int limit,
+			final int offset) throws IOException {
 		
 		Field<Object>[] fields = parseSelectParam(select);
+		
 		SelectJoinStep<Record> query = select(fields).from(schemaName + "." + tableName);
 		
 		if (where.length()>0) {
@@ -115,7 +121,10 @@ public class RowsResource extends DataSourceResource {
 		}
 		
 		if (limit>0) {
-			query.limit(limit);
+			SelectOffsetStep<Record> offsetStep = query.limit(limit);
+			if (offset>0) {
+				offsetStep.offset(offset);
+			}
 		}
 		
 		final String sql = query.toString();
