@@ -62,7 +62,7 @@ public class ServerTest extends JerseyTest {
 			HikariConfig config = new HikariConfig(properties);
 			ds = new HikariDataSource(config);
 			SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
-			builder.bind("jdbc-http-server/db", ds);
+			builder.bind("jdbc/db", ds);
 			builder.activate();
 		} catch (IOException | java.lang.NullPointerException | IllegalStateException | NamingException e) {
 			//logger.error("FATAL ERROR: Could not load {}", fileName, e);
