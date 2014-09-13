@@ -31,10 +31,9 @@ import org.jooq.Field;
 import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
 import org.jooq.Record;
-import org.jooq.Select;
-import org.jooq.SelectConditionStep;
 import org.jooq.SelectJoinStep;
 import org.jooq.SelectOffsetStep;
+import org.jooq.SortField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,11 +56,12 @@ public class RowsResource extends DataSourceResource {
 			@DefaultValue("*") @QueryParam("select") final String select,
 			@DefaultValue("") @QueryParam("where") final String where,
 			@DefaultValue("0") @QueryParam("limit") final String limit,
-			@DefaultValue("0") @QueryParam("offset") final String offset) throws SQLException {
+			@DefaultValue("0") @QueryParam("offset") final String offset,
+			@DefaultValue("") @QueryParam("orderby") final String orderby) throws SQLException {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				writeRows(output, select, where, parseNumericParam(limit), parseNumericParam(offset));
+				writeRows(output, select, where, parseNumericParam(limit), parseNumericParam(offset), orderby);
 			}
 		};
 	}
@@ -96,6 +96,29 @@ public class RowsResource extends DataSourceResource {
 			return fields.toArray(new Field[] { });
 		}
 	};
+	
+	SortField<Object>[] parseOrderbyParam(final String orderby) {
+		if (orderby.equals("")) {
+			return new SortField[] { };
+		} else {
+			String[] parts = orderby.split(",");
+			List<SortField> fields = new ArrayList<SortField>();
+			for (String part : parts) {
+				String[] subparts = part.split(" ");
+				if (subparts.length == 1) {
+					fields.add(field(part).asc());
+				} else if (subparts.length == 2) {
+					if (subparts[1].equals("ASC")) {
+						fields.add(field(subparts[0]).asc());
+					} else {
+						fields.add(field(subparts[0]).desc());
+					}
+				}
+				
+			}
+			return fields.toArray(new SortField[] { });
+		}
+	};
 		
 	int parseNumericParam(final String limit) {
 		if (limit.equals("0")) {
@@ -110,7 +133,8 @@ public class RowsResource extends DataSourceResource {
 			final String select,
 			final String where,
 			final int limit,
-			final int offset) throws IOException {
+			final int offset,
+			final String orderby) throws IOException {
 		
 		Field<Object>[] fields = parseSelectParam(select);
 		
@@ -125,6 +149,10 @@ public class RowsResource extends DataSourceResource {
 			if (offset>0) {
 				offsetStep.offset(offset);
 			}
+		}
+		
+		if (orderby.length()>0) {
+			query.orderBy(parseOrderbyParam(orderby));
 		}
 		
 		final String sql = query.toString();
