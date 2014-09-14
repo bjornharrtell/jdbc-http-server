@@ -1,6 +1,10 @@
 package org.wololo.jdbc.resources;
 
-import static org.jooq.impl.DSL.*;
+import static org.jooq.impl.DSL.delete;
+import static org.jooq.impl.DSL.field;
+import static org.jooq.impl.DSL.select;
+import static org.jooq.impl.DSL.table;
+import static org.jooq.impl.DSL.update;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -15,15 +19,11 @@ import java.util.Map.Entry;
 
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
-import org.jooq.DeleteWhereStep;
-import org.jooq.InsertSetMoreStep;
-import org.jooq.InsertSetStep;
 import org.jooq.Record;
 import org.jooq.UpdateSetFirstStep;
 import org.jooq.UpdateSetMoreStep;

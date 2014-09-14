@@ -33,6 +33,9 @@ expects a JSON object with properties corresponding to column names.
 By default jdbc-http-server will try to find a DataSource from a JDNI Resource named
 `jdbc/db`. The name can be overriden with system property `jdbc-http-server.jdni`.
 
+Alternatively, you can also provide a file named `hikari.properties` in classpath.
+See further documentation for [HikariCP](https://github.com/brettwooldridge/HikariCP).
+
 ### Logging
 
 The default logging level is INFO. Refer to [Logback](http://logback.qos.ch/) for
@@ -40,8 +43,6 @@ further configuration options.
 
 ## TODOs
 
-* Optional support for Basic Authentication (and possibly other methods)
-* Other options for database access configuration
 * Configurable on/off switch for select and where support (as they can be considered a security risk)
 * Configurable on/off switch for update and deletes
 * Optional raw SQL support
