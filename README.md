@@ -40,6 +40,7 @@ further configuration options.
 
 ## TODOs
 
+* Optional support for Basic Authentication (and possibly other methods)
 * Other options for database access configuration
 * Configurable on/off switch for select and where support (as they can be considered a security risk)
 * Configurable on/off switch for update and deletes
