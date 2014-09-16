@@ -45,7 +45,6 @@ public class DataSourceResource {
 		} catch (SQLException e) {
 			logger.warn("Failed to guess dialect will default to SQL99");
 			dialect = SQLDialect.SQL99;
-			e.printStackTrace();
 		}
 		Settings settings = new Settings();
 		settings.setStatementType(StatementType.STATIC_STATEMENT);
