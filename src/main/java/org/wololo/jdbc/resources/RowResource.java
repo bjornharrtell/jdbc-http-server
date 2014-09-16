@@ -1,10 +1,7 @@
 package org.wololo.jdbc.resources;
 
-import static org.jooq.impl.DSL.delete;
 import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
-import static org.jooq.impl.DSL.update;
 
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -47,10 +44,10 @@ public class RowResource extends DataSourceResource {
 			DatabaseMetaData meta = connection.getMetaData();
 			
 			String primaryKey = getPrimaryKey(meta);
-			final String sql = select(field("*"))
+			final String sql = create.select(field("*"))
 					.from(schemaName + "." + tableName)
 					.where(field(primaryKey).equal(id))
-					.toString();
+					.getSQL();
 			logger.debug(sql);
 			
 			try (
@@ -75,12 +72,12 @@ public class RowResource extends DataSourceResource {
 			
 			String primaryKey = getPrimaryKey(meta);
 			
-			UpdateSetFirstStep<Record> sqlTemp = update(table(tableName));
+			UpdateSetFirstStep<Record> sqlTemp = create.update(table(tableName));
 			UpdateSetMoreStep<Record> build = null;
 			for(Entry<String, Object> entry : row.entrySet()) {
 				build = sqlTemp.set(field(entry.getKey()), entry.getValue());
 			}
-			final String sql = build.where(field(primaryKey).equal(id)).toString();
+			final String sql = build.where(field(primaryKey).equal(id)).getSQL();
 			logger.debug(sql);
 			
 			try (final Statement statement = connection.createStatement()) {
@@ -102,7 +99,7 @@ public class RowResource extends DataSourceResource {
 			
 			String primaryKey = getPrimaryKey(meta);
 
-			final String sql = delete(table(tableName)).where(field(primaryKey).equal(coercedPK())).toString();
+			final String sql = create.delete(table(tableName)).where(field(primaryKey).equal(coercedPK())).getSQL();
 			logger.debug(sql);
 			
 			try (final Statement statement = connection.createStatement()) {

@@ -1,8 +1,6 @@
 package org.wololo.jdbc.resources;
 
 import static org.jooq.impl.DSL.field;
-import static org.jooq.impl.DSL.insertInto;
-import static org.jooq.impl.DSL.select;
 import static org.jooq.impl.DSL.table;
 
 import java.io.IOException;
@@ -61,7 +59,12 @@ public class RowsResource extends DataSourceResource {
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
-				writeRows(output, select, where, parseNumericParam(limit), parseNumericParam(offset), orderby);
+				writeRows(output, 
+						select, 
+						where, 
+						parseNumericParam(limit), 
+						parseNumericParam(offset), 
+						orderby);
 			}
 		};
 	}
@@ -69,12 +72,12 @@ public class RowsResource extends DataSourceResource {
 	@POST
 	public void post(Map<String, Object> row) throws SQLException {
 		try (Connection connection = ds.getConnection()) {
-			InsertSetStep<Record> sqlTemp = insertInto(table(tableName));
+			InsertSetStep<Record> sqlTemp = create.insertInto(table(tableName));
 			InsertSetMoreStep<Record> build = null;
 			for(Entry<String, Object> entry : row.entrySet()) {
 				build = sqlTemp.set(field(entry.getKey()), entry.getValue());
 			}
-			final String sql = build.toString();
+			final String sql = build.getSQL();
 			logger.debug(sql);
 			
 			try (final Statement statement = connection.createStatement()) {
@@ -135,10 +138,10 @@ public class RowsResource extends DataSourceResource {
 			final int limit,
 			final int offset,
 			final String orderby) throws IOException {
-		
+			
 		Field<Object>[] fields = parseSelectParam(select);
 		
-		SelectJoinStep<Record> query = select(fields).from(schemaName + "." + tableName);
+		SelectJoinStep<Record> query = create.select(fields).from(schemaName + "." + tableName);
 		
 		if (where.length()>0) {
 			query.where(where);
@@ -155,7 +158,7 @@ public class RowsResource extends DataSourceResource {
 			query.orderBy(parseOrderbyParam(orderby));
 		}
 		
-		final String sql = query.toString();
+		final String sql = query.getSQL();
 		logger.debug(sql);
 		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();
