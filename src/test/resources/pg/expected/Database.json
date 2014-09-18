@@ -1,0 +1,1 @@
+{"type":"database","name":"test","owner":null,"children":["schemas/information_schema","schemas/pg_catalog","schemas/public"]}

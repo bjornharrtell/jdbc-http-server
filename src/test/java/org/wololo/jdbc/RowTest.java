@@ -13,14 +13,15 @@ import javax.ws.rs.core.Response;
 import org.junit.Test;
 
 public class RowTest extends ServerTest {
+	String path = "db/" + identifier("test") + "/schemas/" + identifier("public") + "/tables/" + identifier("test") + "/rows/1";
+	
 	@Test
 	public void testGET() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
 			statement.execute("insert into test (name) values ('test')");
 		}
-		assertEquals(getJson("Row"),
-				target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().get(String.class));
+		assertEquals(getJson("Row"), target(path).request().get(String.class));
 	}
 	
 	@Test
@@ -30,10 +31,9 @@ public class RowTest extends ServerTest {
 			statement.execute("insert into test (name) values ('test')");
 		}
 		Entity<String> entity = Entity.json(getJson("RowPUT"));
-		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().put(entity);
+		Response response = target(path).request().put(entity);
 		assertEquals(204, response.getStatus());
-		assertEquals(getJson("RowPUT"),
-				target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().get(String.class));
+		assertEquals(getJson("RowPUT"), target(path).request().get(String.class));
 	}
 	
 	@Test
@@ -42,13 +42,13 @@ public class RowTest extends ServerTest {
 				Statement statement = connection.createStatement()) {
 			statement.execute("insert into test (name) values ('test')");
 		}
-		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().delete();
+		Response response = target(path).request().delete();
 		assertEquals(204, response.getStatus());
 	}
 	
 	@Test
 	public void testDELETEFailOnMissingPK() throws IOException, SQLException {
-		Response response = target("db/TEST/schemas/PUBLIC/tables/TEST/rows/1").request().delete();
+		Response response = target(path).request().delete();
 		assertEquals(500, response.getStatus());
 	}
 

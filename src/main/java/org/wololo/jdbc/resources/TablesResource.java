@@ -38,7 +38,7 @@ public class TablesResource extends DataSourceResource {
 	
 	List<String> getTableNames(DatabaseMetaData meta) throws SQLException {
 		List<String> tableNames = new ArrayList<String>();
-		try (ResultSet tables = meta.getTables(databaseName, schemaName, null, null)) {
+		try (ResultSet tables = meta.getTables(databaseName, schemaName, null, new String[] {"TABLE"})) {
 			while(tables.next()) {
 				String tableName = tables.getString(3);
 				tableNames.add(tableName);

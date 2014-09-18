@@ -12,6 +12,7 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
+import org.h2.util.JdbcUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -20,6 +21,7 @@ import org.springframework.mock.jndi.SimpleNamingContextBuilder;
 import com.google.common.io.CharStreams;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
 
 public class ServerTest extends JerseyTest {
 
@@ -32,16 +34,21 @@ public class ServerTest extends JerseyTest {
 		application.register(GenericExceptionMapper.class);
 		return application;
 	}
-		
+	
 	String getJson(String name) throws IOException {
-		return CharStreams.toString(new InputStreamReader(this.getClass().getClassLoader().getResourceAsStream("h2/" + name + ".json")));
+		String path = "/" + TestSettings.RDBM + "/" +
+				"expected/" +
+				name + ".json";
+		try (InputStreamReader inputStreamReader = new InputStreamReader(getClass().getResourceAsStream(path))) {
+			return CharStreams.toString(inputStreamReader);
+		}
 	}
 	
 	@Before
 	public void before() throws SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("create table test (id serial, name varchar)");
+			statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR)");
 		}
 	}
 
@@ -49,8 +56,12 @@ public class ServerTest extends JerseyTest {
 	public void after() throws SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("drop table test");
+			statement.execute("DROP TABLE TEST");
 		}
+	}
+	
+	public String identifier(String identifier) {
+		return TestSettings.UPPERCASE_IDENTIFERS ? identifier.toUpperCase() : identifier;
 	}
 	
 	@BeforeClass
@@ -58,9 +69,9 @@ public class ServerTest extends JerseyTest {
 		if (ds != null) return;
 		try {
 			Properties properties = new Properties();
-			properties.load(ServerTest.class.getClassLoader().getResourceAsStream("h2/hikari.properties"));
+			properties.load(ServerTest.class.getClassLoader().getResourceAsStream(TestSettings.RDBM + ".properties"));
 			HikariConfig config = new HikariConfig(properties);
-			ds = new HikariDataSource(config);
+			ds = new HikariDataSource(config);			
 			SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
 			builder.bind("jdbc/db", ds);
 			builder.activate();

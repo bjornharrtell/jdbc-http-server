@@ -9,7 +9,7 @@ import org.junit.Test;
 public class TablesTest extends ServerTest {
 	@Test
 	public void test() throws IOException {
-		assertEquals(getJson("Tables"),
-				target("db/TEST/schemas/PUBLIC/tables").request().get(String.class));
+		String path = "db/" + identifier("test") + "/schemas/" + identifier("public") + "/tables" ;
+		assertEquals(getJson("Tables"),	target(path).request().get(String.class));
 	}
 }
