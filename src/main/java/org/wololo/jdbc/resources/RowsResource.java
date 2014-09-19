@@ -82,11 +82,12 @@ public class RowsResource extends DataSourceResource {
 			
 			try (final Statement statement = connection.createStatement()) {
 				final int result = statement.executeUpdate(sql);
-				// TODO: check that result is as expected
+				if (result != 1) throw new RuntimeException("Unexpected result " + result + " (expected 1)");
 			}
 		}
 	}
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	Field<Object>[] parseSelectParam(final String select) {
 		if (select.equals("*")) {
 			return new Field[] { field(select) };
@@ -100,6 +101,7 @@ public class RowsResource extends DataSourceResource {
 		}
 	};
 	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	SortField<Object>[] parseOrderbyParam(final String orderby) {
 		if (orderby.equals("")) {
 			return new SortField[] { };

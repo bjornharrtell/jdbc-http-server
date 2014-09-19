@@ -25,7 +25,6 @@ import com.zaxxer.hikari.HikariDataSource;
 public class DataSourceResource {
 	final static Logger logger = LoggerFactory.getLogger(DataSourceResource.class);
 
-	//static protected SQLDialect dialect;
 	static protected DSLContext create; 
 	static protected DataSource ds;
 
@@ -37,6 +36,7 @@ public class DataSourceResource {
 		}
 	}
 	
+	@SuppressWarnings("deprecation")
 	void guessDialect() {
 		SQLDialect dialect;
 		try {
@@ -85,8 +85,7 @@ public class DataSourceResource {
 
 			Context initialContext = new InitialContext();
 			try {
-				Context envContext = (Context) initialContext
-						.lookup("java:comp/env");
+				Context envContext = (Context) initialContext.lookup("java:comp/env");
 				logger.info("Java EE container found");
 				ds = (DataSource) envContext.lookup(jdniName);
 				logger.info("DataSource found");

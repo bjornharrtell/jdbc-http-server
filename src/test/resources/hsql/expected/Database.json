@@ -1,0 +1,1 @@
+{"type":"database","name":"TEST","owner":null,"children":["schemas/INFORMATION_SCHEMA","schemas/SYSTEM_LOBS","schemas/PUBLIC"]}

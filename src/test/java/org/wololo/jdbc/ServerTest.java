@@ -12,7 +12,6 @@ import javax.ws.rs.core.Application;
 
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
-import org.h2.util.JdbcUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -48,7 +47,13 @@ public class ServerTest extends JerseyTest {
 	public void before() throws SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR)");
+			
+			if (TestSettings.RDBM == "hsql") {
+				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR(255))");
+			} else {
+				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR)");
+			}
+			
 		}
 	}
 
@@ -65,13 +70,21 @@ public class ServerTest extends JerseyTest {
 	}
 	
 	@BeforeClass
-	public static void setupDB() {
+	public static void setupDB() throws SQLException {
 		if (ds != null) return;
 		try {
 			Properties properties = new Properties();
 			properties.load(ServerTest.class.getClassLoader().getResourceAsStream(TestSettings.RDBM + ".properties"));
 			HikariConfig config = new HikariConfig(properties);
-			ds = new HikariDataSource(config);			
+			ds = new HikariDataSource(config);
+			if (TestSettings.RDBM == "hsql") {
+				try (Connection connection = ds.getConnection();
+					Statement statement = connection.createStatement()) {
+					statement.execute("ALTER CATALOG PUBLIC RENAME TO TEST");
+					statement.execute("SET DATABASE SQL SYNTAX PGS TRUE");
+				}
+			}
+			
 			SimpleNamingContextBuilder builder = new SimpleNamingContextBuilder();
 			builder.bind("jdbc/db", ds);
 			builder.activate();

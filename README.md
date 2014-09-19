@@ -4,6 +4,14 @@
 
 Attempt to implement something like the proposal at http://wiki.postgresql.org/wiki/HTTP_API.
 
+SQL Generation is implemented using [jOOQ](http://www.jooq.org/) and will adapt to its supported DBMS dialects.
+
+Tested with the following DBMSes:
+ 
+ * H2 1.4.181
+ * PostgreSQL 9.3
+ * HSQLDB 2.3.2
+
 ## API Usage
 
 The API is discoverable which means you can access the root resource at /

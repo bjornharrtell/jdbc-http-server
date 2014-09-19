@@ -9,6 +9,8 @@ import org.junit.Test;
 public class DatabasesTest extends ServerTest {
 	@Test
 	public void test() throws IOException {
-		assertEquals(getJson("Databases"), target("db").request().get(String.class));
+		String result = target("db").request().get(String.class);
+		System.out.println(result);
+		assertEquals(getJson("Databases"), result);
 	}
 }
