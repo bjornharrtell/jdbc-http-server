@@ -4,9 +4,9 @@
 
 Attempt to implement something like the proposal at http://wiki.postgresql.org/wiki/HTTP_API.
 
-SQL Generation is implemented using [jOOQ](http://www.jooq.org/) and will adapt to its supported DBMS dialects.
+SQL Generation is implemented using [jOOQ](http://www.jooq.org/) and will adapt to its supported RDBMS dialects.
 
-Tested with the following DBMSes:
+Tested with the following RDBMSes:
  
  * H2 1.4.181
  * PostgreSQL 9.3
