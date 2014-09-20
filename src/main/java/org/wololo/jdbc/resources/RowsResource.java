@@ -9,7 +9,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.jooq.Cursor;
 import org.jooq.Field;
 import org.jooq.InsertSetMoreStep;
 import org.jooq.InsertSetStep;
@@ -56,11 +56,14 @@ public class RowsResource extends DataSourceResource {
 			@DefaultValue("0") @QueryParam("limit") final String limit,
 			@DefaultValue("0") @QueryParam("offset") final String offset,
 			@DefaultValue("") @QueryParam("orderby") final String orderby) throws SQLException {
+		
+		final List<Field<Object>> fields = parseSelectParam(select);
+		
 		return new StreamingOutput() {
 			@Override
 			public void write(OutputStream output) throws IOException, WebApplicationException {
 				writeRows(output, 
-						select, 
+						fields, 
 						where, 
 						parseNumericParam(limit), 
 						parseNumericParam(offset), 
@@ -71,33 +74,27 @@ public class RowsResource extends DataSourceResource {
 	
 	@POST
 	public void post(Map<String, Object> row) throws SQLException {
-		try (Connection connection = ds.getConnection()) {
-			InsertSetStep<Record> sqlTemp = create.insertInto(table(tableName));
-			InsertSetMoreStep<Record> build = null;
-			for(Entry<String, Object> entry : row.entrySet()) {
-				build = sqlTemp.set(field(entry.getKey()), entry.getValue());
-			}
-			final String sql = build.getSQL();
-			logger.debug(sql);
-			
-			try (final Statement statement = connection.createStatement()) {
-				final int result = statement.executeUpdate(sql);
-				if (result != 1) throw new RuntimeException("Unexpected result " + result + " (expected 1)");
-			}
+		InsertSetStep<Record> step = create.insertInto(table(tableName));
+		InsertSetMoreStep<Record> query = null;
+		for(Entry<String, Object> entry : row.entrySet()) {
+			query = step.set(field(entry.getKey()), entry.getValue());
 		}
+		logger.debug(query.getSQL());
+		
+		final int result = query.execute();
+		if (result != 1) throw new RuntimeException("Unexpected result " + result + " (expected 1)");
 	}
 	
-	@SuppressWarnings({ "unchecked", "rawtypes" })
-	Field<Object>[] parseSelectParam(final String select) {
+	List<Field<Object>> parseSelectParam(final String select) throws SQLException {
 		if (select.equals("*")) {
-			return new Field[] { field(select) };
+			return getFields();
 		} else {
 			String[] columns = select.split(",");
-			List<Field> fields = new ArrayList<Field>();
+			List<Field<Object>> fields = new ArrayList<Field<Object>>();
 			for (String column : columns) {
 				fields.add(field(column));
 			}
-			return fields.toArray(new Field[] { });
+			return fields;
 		}
 	};
 	
@@ -135,14 +132,12 @@ public class RowsResource extends DataSourceResource {
 	
 	void writeRows(
 			final OutputStream output,
-			final String select,
+			final List<Field<Object>> fields,
 			final String where,
 			final int limit,
 			final int offset,
 			final String orderby) throws IOException {
 			
-		Field<Object>[] fields = parseSelectParam(select);
-		
 		SelectJoinStep<Record> query = create.select(fields).from(schemaName + "." + tableName);
 		
 		if (where.length()>0) {
@@ -160,45 +155,43 @@ public class RowsResource extends DataSourceResource {
 			query.orderBy(parseOrderbyParam(orderby));
 		}
 		
-		final String sql = query.getSQL();
-		logger.debug(sql);
+		logger.debug(query.getSQL());
 		final JsonGenerator jsonGenerator = new JsonFactory().createGenerator(output, JsonEncoding.UTF8);
 		jsonGenerator.writeStartArray();
-		try (
-				final Connection connection = ds.getConnection();
-				final Statement statement = connection.createStatement();
-				final ResultSet resultSet = statement.executeQuery(sql)) {
-			DatabaseMetaData meta = connection.getMetaData();
-			List<String> columns = getColumns(meta);
-			int columnsTotal = (select.equals("*")) ? columns.size() : fields.length;
-			while (resultSet.next()) {
-				writeRow(jsonGenerator, resultSet, columnsTotal);
+		
+		final Cursor<Record> cursor = query.fetchLazy();
+		try {
+			while (cursor.hasNext()) {
+				writeRow(jsonGenerator, cursor.fetchOne());
 			}
 		} catch (SQLException e) {
-			logger.error("SQLException when reading row data from ResultSet", e);
-			// TODO: think about how to gracefully handle eventual SQLExceptions
+			logger.error("Error when reading row data from ResultSet", e);
 		} finally {
+			cursor.close();
 			jsonGenerator.writeEndArray();
 			jsonGenerator.close();
 		}
 	}
 	
-	void writeRow(final JsonGenerator jsonGenerator, final ResultSet resultSet, int columnsTotal) throws SQLException, JsonGenerationException, IOException {
+	void writeRow(final JsonGenerator jsonGenerator, final Record record) throws SQLException, JsonGenerationException, IOException {
 		jsonGenerator.writeStartArray();
-		for (int i = 1; i <= columnsTotal; i++) {
-			jsonGenerator.writeObject(resultSet.getObject(i));
+		for (Object value : record.intoArray()) {
+			jsonGenerator.writeObject(value);
 		}
 		jsonGenerator.writeEndArray();
 	}
 	
-	List<String> getColumns(DatabaseMetaData meta) throws SQLException {
-		try (ResultSet resultSet = meta.getColumns(databaseName, schemaName, tableName, null)) {
-			List<String> columnNames = new ArrayList<String>();
-			while (resultSet.next()) {
-				String columnName = resultSet.getString(4);
-				columnNames.add(columnName);
+	List<Field<Object>> getFields() throws SQLException {
+		try (Connection connection = ds.getConnection()) {
+			DatabaseMetaData meta = connection.getMetaData();
+			try (ResultSet resultSet = meta.getColumns(databaseName, schemaName, tableName, null)) {
+				List<Field<Object>> fields = new ArrayList<Field<Object>>();
+				while (resultSet.next()) {
+					String columnName = resultSet.getString(4);
+					fields.add(field(columnName));
+				}
+				return fields;
 			}
-			return columnNames;
 		}
 	}
 }

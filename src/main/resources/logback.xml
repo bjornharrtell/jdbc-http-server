@@ -7,6 +7,7 @@
   </appender>
   
   <logger name="com.zaxxer.hikari" level="INFO"></logger>
+  <logger name="org.jooq" level="INFO"></logger>
   <logger name="org.wololo.jdbc" level="INFO"></logger>
 
   <root level="debug">

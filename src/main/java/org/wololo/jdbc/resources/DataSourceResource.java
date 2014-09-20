@@ -48,7 +48,7 @@ public class DataSourceResource {
 		}
 		Settings settings = new Settings();
 		settings.setStatementType(StatementType.STATIC_STATEMENT);
-		create = DSL.using(dialect, settings);
+		create = DSL.using(ds, dialect, settings);
 	};
 	
 	boolean tryHikari() {
