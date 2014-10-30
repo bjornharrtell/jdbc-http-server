@@ -10,9 +10,12 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
@@ -24,6 +27,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.StreamingOutput;
 
+import org.jooq.Comparator;
+import org.jooq.Condition;
 import org.jooq.Cursor;
 import org.jooq.Field;
 import org.jooq.InsertSetMoreStep;
@@ -47,6 +52,18 @@ public class RowsResource extends DataSourceResource {
 	@PathParam("databaseName") String databaseName;
 	@PathParam("schemaName") String schemaName;
 	@PathParam("tableName") String tableName;
+	
+	static final Pattern wherePattern = Pattern.compile("(\\w+)([<>!=])(\\w+|'\\w+')");
+	static final Map<String, Comparator> comparatorMap = new HashMap<String, Comparator>();
+	static {
+		comparatorMap.put("=", Comparator.EQUALS);
+		comparatorMap.put("!=", Comparator.NOT_EQUALS);
+		comparatorMap.put(">", Comparator.GREATER);
+		comparatorMap.put("=>", Comparator.GREATER_OR_EQUAL);
+		comparatorMap.put("<", Comparator.LESS);
+		comparatorMap.put("=<", Comparator.LESS_OR_EQUAL);
+		comparatorMap.put("LIKE", Comparator.LIKE);
+	}
 	
 	@GET
 	@Produces("application/json")
@@ -130,6 +147,23 @@ public class RowsResource extends DataSourceResource {
 		}
 	}
 	
+	Condition parseWhere(String where) {
+		Matcher matcher = wherePattern.matcher(where);
+		if (matcher.matches() != true) {
+			throw new RuntimeException("Unexpected where clause (must conform to a op b)");
+		}
+		int groups = matcher.groupCount();
+		
+		if (groups == 3) {
+			String a = matcher.group(1);
+			String op = matcher.group(2);
+			String b = matcher.group(3);
+			return field(a).compare(comparatorMap.get(op), field(b));
+		} else {
+			throw new RuntimeException("Unexpected where clause (must conform to a op b)");
+		}
+	}
+	
 	void writeRows(
 			final OutputStream output,
 			final List<Field<Object>> fields,
@@ -141,7 +175,7 @@ public class RowsResource extends DataSourceResource {
 		SelectJoinStep<Record> query = create.select(fields).from(schemaName + "." + tableName);
 		
 		if (where.length()>0) {
-			query.where(where);
+			query.where(parseWhere(where));
 		}
 		
 		if (limit>0) {

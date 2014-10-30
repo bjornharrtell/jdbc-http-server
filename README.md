@@ -53,6 +53,7 @@ further configuration options.
 
 * Configurable on/off switch for select and where support (as they can be considered a security risk)
 * Configurable on/off switch for update and deletes
+* Complex where clause parsing
 * Optional raw SQL support
 * Spatial support
 * Security configuration allowing partial db access (similar to a firewall)
