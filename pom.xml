@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.wololo.jdbc</groupId>
 	<artifactId>jdbc-http-server</artifactId>
-	<version>0.4.0</version>
+	<version>0.4.1-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>jdbc-http-server</name>
 	<description>JDBC HTTP Server</description>
