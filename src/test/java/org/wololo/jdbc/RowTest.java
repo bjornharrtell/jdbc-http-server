@@ -19,7 +19,7 @@ public class RowTest extends ServerTest {
 	public void testGET() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("insert into test (name, time) values ('test', '2004-10-19 10:23:54')");
+			statement.execute("insert into test (name) values ('test')");
 		}
 		assertEquals(getJson("Row"), target(path).request().get(String.class));
 	}
@@ -28,7 +28,7 @@ public class RowTest extends ServerTest {
 	public void testPUT() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("insert into test (name, time) values ('test', '2004-10-19 10:23:54')");
+			statement.execute("insert into test (name) values ('test')");
 		}
 		Entity<String> entity = Entity.json(getJson("RowPUT"));
 		Response response = target(path).request().put(entity);
@@ -40,7 +40,7 @@ public class RowTest extends ServerTest {
 	public void testDELETE() throws IOException, SQLException {
 		try (Connection connection = ds.getConnection();
 				Statement statement = connection.createStatement()) {
-			statement.execute("insert into test (name, time) values ('test, '2004-10-19 10:23:54')");
+			statement.execute("insert into test (name) values ('test')");
 		}
 		Response response = target(path).request().delete();
 		assertEquals(204, response.getStatus());
