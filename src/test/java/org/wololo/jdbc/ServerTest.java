@@ -49,9 +49,9 @@ public class ServerTest extends JerseyTest {
 				Statement statement = connection.createStatement()) {
 			
 			if (TestSettings.RDBM == "hsql") {
-				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR(255))");
+				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR(255), TIME TIMESTAMP)");
 			} else {
-				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR)");
+				statement.execute("CREATE TABLE TEST (ID SERIAL PRIMARY KEY, NAME VARCHAR, TIME TIMESTAMP)");
 			}
 			
 		}

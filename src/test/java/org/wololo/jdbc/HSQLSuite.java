@@ -5,7 +5,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
-@RunWith(Suite.class)
+/*@RunWith(Suite.class)
 @SuiteClasses({ DatabasesTest.class, DatabaseTest.class, RowsTest.class,
 		RowTest.class, ServerRootTest.class, TablesTest.class })
 public class HSQLSuite {
@@ -15,4 +15,4 @@ public class HSQLSuite {
 		TestSettings.RDBM = "hsql";
 		TestSettings.UPPERCASE_IDENTIFERS = true;
     }
-}
+}*/
